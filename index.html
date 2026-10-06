@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tom's Multiplication Adventure</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+    background: linear-gradient(135deg, #a8e6ff, #d9f7ff 48%, #fff3b0);
+    color: #17324d;
+    overflow-x: hidden;
+  }
+  .cloud { position: fixed; background:#fff; border-radius:100px; opacity:.75; z-index:0; }
+  .cloud:before,.cloud:after { content:""; position:absolute; background:#fff; border-radius:50%; }
+  .cloud.c1 { width:150px;height:45px;top:8%;left:4%; }
+  .cloud.c1:before { width:65px;height:65px;left:25px;bottom:12px; }
+  .cloud.c1:after { width:55px;height:55px;right:22px;bottom:8px; }
+  .cloud.c2 { width:180px;height:50px;top:18%;right:3%; }
+  .cloud.c2:before { width:75px;height:75px;left:30px;bottom:12px; }
+  .cloud.c2:after { width:60px;height:60px;right:28px;bottom:7px; }
+
+  .game {
+    position: relative;
+    z-index: 1;
+    width: min(940px, 94vw);
+    margin: 25px auto 35px;
+  }
+  header {
+    background: rgba(255,255,255,.94);
+    border: 4px solid #3d8dcc;
+    border-radius: 28px;
+    padding: 18px 22px;
+    box-shadow: 0 10px 0 rgba(35,104,153,.16);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+  }
+  h1 { margin:0; color:#1268a1; font-size:clamp(27px,5vw,44px); }
+  .subtitle { margin:5px 0 0; font-size:16px; color:#4d6475; }
+  .cat-mini { font-size:65px; filter: drop-shadow(0 4px 0 #b8d4df); }
+
+  .screen {
+    margin-top:18px;
+    background:rgba(255,255,255,.96);
+    border-radius:30px;
+    padding:24px;
+    box-shadow:0 14px 0 rgba(35,104,153,.14);
+    border:3px solid #8cc9e9;
+  }
+
+  .levels {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin:12px 0 20px;
+  }
+  .level {
+    border:3px solid #bddcec;
+    background:#f4fbff;
+    border-radius:18px;
+    padding:14px;
+    cursor:pointer;
+    font-weight:800;
+    font-size:17px;
+    color:#275a78;
+    transition:.15s;
+  }
+  .level:hover { transform:translateY(-2px); }
+  .level.active { background:#ffdc68; border-color:#e3a900; color:#5b4200; }
+
+  .stats {
+    display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
+    margin-bottom:20px;
+  }
+  .stat {
+    background:#eef9ff; border-radius:15px; padding:9px 16px;
+    font-weight:800; border:2px solid #c9e9f7;
+  }
+
+  .play-area {
+    display:grid;
+    grid-template-columns:180px 1fr;
+    gap:20px;
+    align-items:center;
+  }
+  .tom {
+    text-align:center;
+    background:#e9f8ff;
+    border:3px solid #a6d9ef;
+    border-radius:25px;
+    padding:12px 8px;
+  }
+  .tom-face {
+    position:relative;
+    width:145px;
+    height:145px;
+    margin:auto;
+    background:#7d8c96;
+    border-radius:48% 48% 45% 45%;
+    border:5px solid #4f606b;
+    box-shadow: inset 0 -8px 0 #65747d;
+  }
+  .ear {
+    position:absolute; top:-35px; width:58px;height:65px;
+    background:#65747d;border:5px solid #4f606b;
+    transform:rotate(38deg); border-radius:15px 48px 8px 8px; z-index:-1;
+  }
+  .ear.left{left:2px}.ear.right{right:2px;transform:rotate(-38deg)}
+  .inner-ear{position:absolute;inset:11px;background:#e9a7ad;border-radius:12px 35px 5px 5px;}
+  .right .inner-ear{border-radius:35px 12px 5px 5px;}
+  .eye {
+    position:absolute; top:42px; width:29px;height:38px;
+    background:#fff;border-radius:50%; border:3px solid #4f606b;
+  }
+  .eye.left{left:32px}.eye.right{right:32px}
+  .pupil{width:11px;height:20px;background:#17232a;border-radius:50%;margin:7px auto}
+  .muzzle {
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom:27px; width:72px;height:48px;background:#dce3e5;border-radius:50%;
+  }
+  .nose{position:absolute;left:50%;transform:translateX(-50%);top:5px;width:22px;height:14px;background:#e69aa4;border-radius:50%}
+  .mouth{position:absolute;left:50%;top:17px;width:30px;height:17px;transform:translateX(-50%);border-bottom:3px solid #37444a;border-radius:50%;}
+  .whisker{position:absolute;width:42px;height:2px;background:#59676e;top:28px}
+  .w1{left:-34px;transform:rotate(8deg)}.w2{left:-34px;top:40px;transform:rotate(-5deg)}
+  .w3{right:-34px;transform:rotate(-8deg)}.w4{right:-34px;top:40px;transform:rotate(5deg)}
+  .tom-name{font-weight:900;font-size:20px;margin-top:8px;color:#426474}
+  .speech{font-size:14px;font-weight:700;margin:4px 0 0;color:#4e6977;min-height:20px}
+
+  .question-card {
+    text-align:center;
+    background:linear-gradient(180deg,#fffdf3,#fff);
+    border:4px solid #ffd665;
+    border-radius:25px;
+    padding:20px;
+  }
+  .question { font-size:clamp(45px,8vw,72px); font-weight:900; color:#194d70; margin:8px 0 18px; }
+  .answer-grid {
+    display:grid; grid-template-columns:repeat(2,1fr); gap:12px;
+    max-width:470px;margin:auto;
+  }
+  .answer {
+    border:3px solid #7fc4e5;
+    background:#e9f8ff;
+    border-radius:18px;
+    padding:15px;
+    font-size:28px;
+    font-weight:900;
+    color:#1e5d80;
+    cursor:pointer;
+    box-shadow:0 5px 0 #b6dcea;
+    transition:.12s;
+  }
+  .answer:hover { transform:translateY(-2px); background:#d9f3ff; }
+  .answer:active { transform:translateY(3px); box-shadow:0 2px 0 #b6dcea; }
+  .answer.correct { background:#baf2c7; border-color:#3cba60; color:#17662d; }
+  .answer.wrong { background:#ffd0d0; border-color:#e86d6d; color:#9a2828; }
+
+  .message {
+    min-height:42px; display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:900;margin:12px 0 0;
+  }
+  .next {
+    display:none; margin:15px auto 0; border:0; border-radius:16px;
+    background:#ff9e43;color:#fff;padding:13px 28px;font-size:18px;font-weight:900;
+    cursor:pointer;box-shadow:0 5px 0 #d97721;
+  }
+  .next.show{display:block}
+  .progress-wrap {margin-top:18px;background:#dff2fb;border-radius:99px;height:14px;overflow:hidden}
+  .progress {height:100%;width:0;background:#48b6e8;transition:.3s}
+  .hint { margin:14px 0 0;text-align:center;color:#607987;font-size:14px; }
+
+  .result {
+    display:none;text-align:center;padding:25px;
+  }
+  .result.show{display:block}
+  .trophy{font-size:80px}
+  .result h2{font-size:35px;margin:5px}
+  .result p{font-size:20px}
+  .restart{
+    border:0;background:#3da9dc;color:white;padding:14px 28px;border-radius:17px;
+    font-weight:900;font-size:18px;cursor:pointer;box-shadow:0 5px 0 #217ba8;
+  }
+
+  footer{text-align:center;color:#55717f;font-size:13px;margin-top:15px}
+  .confetti{position:fixed;top:-20px;font-size:22px;pointer-events:none;animation:fall 900ms ease-out forwards;z-index:10}
+  @keyframes fall {to{transform:translateY(110vh) rotate(540deg);opacity:0}}
+  @media(max-width:680px){
+    header{flex-direction:column;text-align:center}
+    .play-area{grid-template-columns:1fr}
+    .tom{max-width:210px;margin:auto}
+    .levels{grid-template-columns:1fr}
+    .screen{padding:16px}
+  }
+</style>
+</head>
+<body>
+<div class="cloud c1"></div><div class="cloud c2"></div>
+
+<div class="game">
+<header>
+  <div>
+    <h1>🐾 Tom's Multiplication Adventure!</h1>
+    <p class="subtitle">Learn, play and become a multiplication superstar!</p>
+  </div>
+  <div class="cat-mini">😺</div>
+</header>
+
+<div class="screen" id="gameScreen">
+  <h2 style="text-align:center;margin:2px 0 10px;">Choose Your Level</h2>
+  <div class="levels">
+    <button class="level active" data-level="1">🌱 Primary 1<br><small>Tables 1–5</small></button>
+    <button class="level" data-level="2">⭐ Primary 2<br><small>Tables 2–10</small></button>
+    <button class="level" data-level="3">🚀 Primary 3<br><small>Tables 2–12</small></button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">🏆 Score: <span id="score">0</span></div>
+    <div class="stat">🔥 Streak: <span id="streak">0</span></div>
+    <div class="stat">❓ Question: <span id="qnum">1</span>/10</div>
+  </div>
+
+  <div class="play-area">
+    <div class="tom">
+      <div class="tom-face">
+        <div class="ear left"><div class="inner-ear"></div></div>
+        <div class="ear right"><div class="inner-ear"></div></div>
+        <div class="eye left"><div class="pupil"></div></div>
+        <div class="eye right"><div class="pupil"></div></div>
+        <div class="muzzle">
+          <div class="nose"></div><div class="mouth"></div>
+          <div class="whisker w1"></div><div class="whisker w2"></div>
+          <div class="whisker w3"></div><div class="whisker w4"></div>
+        </div>
+      </div>
+      <div class="tom-name">Tom 😺</div>
+      <div class="speech" id="speech">Let's multiply!</div>
+    </div>
+
+    <div class="question-card">
+      <div style="font-weight:800;color:#718b98;">What is...</div>
+      <div class="question" id="question">2 × 3 = ?</div>
+      <div class="answer-grid" id="answers"></div>
+      <div class="message" id="message"></div>
+      <button class="next" id="nextBtn">Next Question ➜</button>
+      <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+      <div class="hint">💡 Tip: Multiplication is repeated addition. You can do it!</div>
+    </div>
+  </div>
+</div>
+
+<div class="screen result" id="resultScreen">
+  <div class="trophy" id="trophy">🏆</div>
+  <h2 id="resultTitle">Amazing!</h2>
+  <p>You scored <strong id="finalScore">0</strong> points out of 100.</p>
+  <p id="resultMessage"></p>
+  <button class="restart" id="restart">🔄 Play Again</button>
+</div>
+
+<footer>Tom's Multiplication Adventure • 10 questions per round • Works offline</footer>
+</div>
+
+<script>
+(() => {
+  let level = 1, score = 0, streak = 0, questionNo = 1;
+  let a = 2, b = 3, correct = 6, answered = false;
+
+  const $ = id => document.getElementById(id);
+  const question = $("question"), answers = $("answers"), message = $("message");
+  const nextBtn = $("nextBtn"), speech = $("speech");
+
+  const ranges = {
+    1: [1,5],
+    2: [2,10],
+    3: [2,12]
+  };
+
+  const encouragements = [
+    "Great job! 🌟", "Fantastic! 🎉", "You're a multiplication star! ⭐",
+    "Tom is impressed! 😺", "Purr-fect answer! 🐾", "Super smart! 🚀",
+    "Keep it up! 💪", "Brilliant! 🏆"
+  ];
+  const tryAgain = [
+    "Almost! Give it another try. 💪",
+    "Nice attempt! Let's learn from it. 🌱",
+    "Don't give up — you can do this! ⭐"
+  ];
+
+  function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function makeQuestion(){
+    answered = false;
+    message.textContent = "";
+    message.style.color = "";
+    nextBtn.classList.remove("show");
+    $("qnum").textContent = questionNo;
+    $("progress").style.width = ((questionNo-1)/10*100) + "%";
+
+    const [min,max] = ranges[level];
+    a = rand(min,max);
+    b = rand(min,max);
+    correct = a*b;
+    question.textContent = `${a} × ${b} = ?`;
+
+    let choices = new Set([correct]);
+    while(choices.size < 4){
+      const variation = rand(-5,5);
+      let wrong = correct + variation;
+      if(wrong > 0 && wrong !== correct) choices.add(wrong);
+    }
+    choices = [...choices].sort(() => Math.random()-.5);
+
+    answers.innerHTML = "";
+    choices.forEach(value => {
+      const btn = document.createElement("button");
+      btn.className = "answer";
+      btn.textContent = value;
+      btn.onclick = () => checkAnswer(btn, value);
+      answers.appendChild(btn);
+    });
+    speech.textContent = questionNo === 1 ? "Let's multiply!" : "Can you solve it?";
+  }
+
+  function checkAnswer(btn, value){
+    if(answered) return;
+    answered = true;
+    document.querySelectorAll(".answer").forEach(b => b.disabled = true);
+
+    if(value === correct){
+      btn.classList.add("correct");
+      streak++;
+      score += 10 + Math.min(streak-1,5)*2;
+      $("score").textContent = score;
+      $("streak").textContent = streak;
+      message.textContent = encouragements[rand(0,encouragements.length-1)];
+      message.style.color = "#16833a";
+      speech.textContent = "Purr-fect! 😺";
+      confetti();
+    } else {
+      btn.classList.add("wrong");
+      streak = 0;
+      $("streak").textContent = streak;
+      document.querySelectorAll(".answer").forEach(b => {
+        if(Number(b.textContent) === correct) b.classList.add("correct");
+      });
+      message.innerHTML = `${tryAgain[rand(0,tryAgain.length-1)]}<br><small>The answer is ${correct}.</small>`;
+      message.style.color = "#b04b25";
+      speech.textContent = "Let's try the next one!";
+    }
+
+    nextBtn.classList.add("show");
+    if(questionNo === 10) nextBtn.textContent = "See My Score 🏆";
+  }
+
+  nextBtn.onclick = () => {
+    if(questionNo >= 10){ showResults(); return; }
+    questionNo++;
+    makeQuestion();
+  };
+
+  function showResults(){
+    $("gameScreen").style.display = "none";
+    $("resultScreen").classList.add("show");
+    $("finalScore").textContent = Math.min(score,100);
+    let title, msg, trophy;
+    const s = Math.min(score,100);
+    if(s >= 90){ title="Multiplication Champion! 🏆"; msg="Wow! Tom is doing a happy dance because you are amazing!"; trophy="🏆"; }
+    else if(s >= 70){ title="Super Star! ⭐"; msg="Excellent work! A little more practice and you'll be a champion."; trophy="🌟"; }
+    else if(s >= 50){ title="Great Effort! 💪"; msg="You're getting stronger. Keep practising your times tables!"; trophy="🥳"; }
+    else { title="Keep Practising! 🌱"; msg="Every question helps your brain grow. Try again with Tom!"; trophy="🐾"; }
+    $("resultTitle").textContent=title;
+    $("resultMessage").textContent=msg;
+    $("trophy").textContent=trophy;
+  }
+
+  $("restart").onclick = () => {
+    score=0; streak=0; questionNo=1;
+    $("score").textContent=0; $("streak").textContent=0;
+    $("resultScreen").classList.remove("show");
+    $("gameScreen").style.display="";
+    makeQuestion();
+  };
+
+  document.querySelectorAll(".level").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".level").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      level = Number(btn.dataset.level);
+      score=0; streak=0; questionNo=1;
+      $("score").textContent=0; $("streak").textContent=0;
+      makeQuestion();
+    };
+  });
+
+  function confetti(){
+    const pieces=["⭐","🎉","✨","🐾","🌟","💙"];
+    for(let i=0;i<12;i++){
+      const el=document.createElement("div");
+      el.className="confetti";
+      el.textContent=pieces[rand(0,pieces.length-1)];
+      el.style.left=rand(5,95)+"vw";
+      el.style.animationDelay=rand(0,250)+"ms";
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),1300);
+    }
+  }
+
+  document.addEventListener("keydown", e => {
+    if(answered && (e.key==="Enter" || e.key===" ")) nextBtn.click();
+    if(!answered && ["1","2","3","4"].includes(e.key)){
+      const btn=document.querySelectorAll(".answer")[Number(e.key)-1];
+      if(btn) btn.click();
+    }
+  });
+
+  makeQuestion();
+})();
+</script>
+</body>
+</html>
